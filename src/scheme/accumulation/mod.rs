@@ -1,7 +1,7 @@
 use crate::{
     loader::Loader,
     protocol::Protocol,
-    scheme::kzg::msm::MSM,
+    scheme::msm::MSM,
     util::{Curve, Transcript},
     Error,
 };

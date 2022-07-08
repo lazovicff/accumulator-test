@@ -11,9 +11,6 @@ use std::{io::Read, iter};
 
 pub mod halo2;
 
-#[cfg(feature = "evm")]
-pub mod evm;
-
 impl<C: CurveExt> UncompressedEncoding for C
 where
     <C::AffineExt as CurveAffine>::Base: PrimeField<Repr = [u8; 32]>,

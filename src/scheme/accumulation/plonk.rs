@@ -1,7 +1,7 @@
 use crate::{
     loader::{LoadedScalar, Loader},
     protocol::Protocol,
-    scheme::kzg::{
+    scheme::{
         accumulation::{AccumulationScheme, AccumulationStrategy, Accumulator},
         msm::MSM,
     },

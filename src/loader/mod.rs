@@ -3,9 +3,6 @@ use std::{fmt::Debug, iter};
 
 pub mod native;
 
-#[cfg(feature = "evm")]
-pub mod evm;
-
 #[cfg(feature = "halo2")]
 pub mod halo2;
 

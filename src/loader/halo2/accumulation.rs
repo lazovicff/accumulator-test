@@ -4,7 +4,7 @@ use crate::{
         LoadedEcPoint,
     },
     protocol::Protocol,
-    scheme::kzg::{AccumulationStrategy, Accumulator, SameCurveAccumulation, MSM},
+    scheme::{AccumulationStrategy, Accumulator, SameCurveAccumulation, MSM},
     util::Transcript,
     Error,
 };

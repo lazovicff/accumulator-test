@@ -1,7 +1,7 @@
 use crate::{
     loader::native::NativeLoader,
     protocol::Protocol,
-    scheme::kzg::{AccumulationStrategy, Accumulator, SameCurveAccumulation, MSM},
+    scheme::{AccumulationStrategy, Accumulator, SameCurveAccumulation, MSM},
     util::{fe_from_limbs, Curve, Group, PrimeCurveAffine, Transcript},
     Error,
 };

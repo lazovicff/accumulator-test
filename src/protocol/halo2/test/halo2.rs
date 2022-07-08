@@ -8,7 +8,7 @@ use crate::{
         },
         Protocol,
     },
-    scheme::kzg::{self, AccumulationScheme, ShplonkAccumulationScheme},
+    scheme::{self, AccumulationScheme, ShplonkAccumulationScheme},
     util::{fe_to_limbs, Curve, Group, PrimeCurveAffine},
 };
 use halo2_curves::bn256::{Fr, G1Affine, G1};
@@ -40,7 +40,7 @@ type BaseFieldEccChip<C> = halo2_wrong_ecc::BaseFieldEccChip<C, LIMBS, BITS>;
 type Halo2Loader<'a, 'b, C> = halo2::Halo2Loader<'a, 'b, C, LIMBS, BITS>;
 type PoseidonTranscript<C, L, S, B> =
     halo2::PoseidonTranscript<C, L, S, B, NativeRepresentation, LIMBS, BITS, T, RATE, R_F, R_P>;
-type SameCurveAccumulation<C, L> = kzg::SameCurveAccumulation<C, L, LIMBS, BITS>;
+type SameCurveAccumulation<C, L> = scheme::SameCurveAccumulation<C, L, LIMBS, BITS>;
 
 pub struct SnarkWitness<C: Curve> {
     protocol: Protocol<C>,

@@ -1,7 +1,7 @@
 use crate::{
     collect_slice, halo2_create_snark, halo2_native_verify, halo2_prepare,
     protocol::halo2::test::MainGateWithRange,
-    scheme::kzg::{PlonkAccumulationScheme, ShplonkAccumulationScheme},
+    scheme::{PlonkAccumulationScheme, ShplonkAccumulationScheme},
 };
 use halo2_curves::bn256::G1Affine;
 use halo2_proofs::{

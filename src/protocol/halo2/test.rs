@@ -31,9 +31,6 @@ use std::{fs, iter};
 mod halo2;
 mod native;
 
-#[cfg(feature = "evm")]
-mod evm;
-
 pub const LIMBS: usize = 4;
 pub const BITS: usize = 68;
 
@@ -439,7 +436,7 @@ macro_rules! halo2_create_snark {
 #[macro_export]
 macro_rules! halo2_native_accumulate {
     ([kzg], $protocol:expr, $statements:expr, $scheme:ty, $transcript:expr, $stretagy:expr) => {{
-        use $crate::{loader::native::NativeLoader, scheme::kzg::AccumulationScheme};
+        use $crate::{loader::native::NativeLoader, scheme::AccumulationScheme};
 
         <$scheme>::accumulate(
             $protocol,
@@ -460,7 +457,7 @@ macro_rules! halo2_native_verify {
         use $crate::{
             halo2_native_accumulate,
             protocol::halo2::test::{BITS, LIMBS},
-            scheme::kzg::SameCurveAccumulation,
+            scheme::SameCurveAccumulation,
         };
 
         let mut stretagy = SameCurveAccumulation::<_, _, LIMBS, BITS>::default();
