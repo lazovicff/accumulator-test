@@ -1,6 +1,5 @@
 use crate::util::{Curve, Domain, Expression, Query};
 
-#[cfg(feature = "halo2")]
 pub mod halo2;
 
 #[derive(Clone, Debug)]

@@ -2,7 +2,7 @@ use crate::{
     protocol::Protocol,
     util::{CommonPolynomial, Domain, Expression, Query, Rotation},
 };
-use halo2_proofs::{
+use halo2_wrong::halo2::{
     arithmetic::{CurveAffine, CurveExt, FieldExt},
     plonk::{self, Advice, Any, ConstraintSystem, Fixed, Instance, VerifyingKey},
     poly,

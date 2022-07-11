@@ -4,7 +4,7 @@ use crate::{
     Error,
 };
 use halo2_curves::CurveAffine;
-use halo2_proofs::transcript::{
+use halo2_wrong::halo2::transcript::{
     EncodedChallenge, Transcript, TranscriptRead, TranscriptReadBuffer, TranscriptWrite,
     TranscriptWriterBuffer,
 };

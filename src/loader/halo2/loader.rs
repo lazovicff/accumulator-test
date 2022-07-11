@@ -3,7 +3,7 @@ use crate::{
     util::{Curve, Field, FieldOps, Group},
 };
 use halo2_curves::CurveAffine;
-use halo2_proofs::circuit;
+use halo2_wrong::halo2::circuit;
 use halo2_wrong_ecc::{
     integer::{
         rns::{Integer, Rns},
@@ -12,7 +12,7 @@ use halo2_wrong_ecc::{
     AssignedPoint, BaseFieldEccChip, EccConfig,
 };
 use halo2_wrong_maingate::{
-    Assigned, AssignedValue, CombinationOptionCommon, MainGate, MainGateInstructions, RegionCtx,
+    AssignedValue, CombinationOptionCommon, MainGate, MainGateInstructions, RegionCtx,
     Term,
 };
 use rand::rngs::OsRng;
@@ -89,7 +89,7 @@ impl<'a, 'b, C: CurveAffine, const LIMBS: usize, const BITS: usize>
     ) -> Scalar<'a, 'b, C, LIMBS, BITS> {
         let assigned = self
             .main_gate
-            .assign_value(&mut self.ctx_mut(), &scalar.into())
+            .assign_value(&mut self.ctx_mut(), scalar.into())
             .unwrap();
         self.scalar(Value::Assigned(assigned))
     }
@@ -130,13 +130,13 @@ impl<'a, 'b, C: CurveAffine, const LIMBS: usize, const BITS: usize>
         x_limbs: [AssignedValue<C::Scalar>; LIMBS],
         y_limbs: [AssignedValue<C::Scalar>; LIMBS],
     ) -> EcPoint<'a, 'b, C, LIMBS, BITS> {
-        let [x, y] = [x_limbs, y_limbs]
+        let [x, y] = [x_limbs.clone(), y_limbs.clone()]
             .map(|limbs| {
                 limbs.iter().enumerate().fold(
                     circuit::Value::known([C::Scalar::zero(); LIMBS]),
                     |acc, (idx, limb)| {
                         acc.zip(limb.value()).map(|(mut acc, limb)| {
-                            acc[idx] = limb;
+                            acc[idx] = *limb;
                             acc
                         })
                     },
@@ -170,7 +170,7 @@ impl<'a, 'b, C: CurveAffine, const LIMBS: usize, const BITS: usize>
         ) {
             self.ctx
                 .borrow_mut()
-                .constrain_equal(src.cell(), dst.cell())
+                .constrain_equal(src.cell(), AssignedValue::from(dst).cell())
                 .unwrap();
         }
 
@@ -272,9 +272,9 @@ impl<'a, 'b, C: CurveAffine, const LIMBS: usize, const BITS: usize>
             (Value::Assigned(assigned), Value::Constant(constant))
             | (Value::Constant(constant), Value::Assigned(assigned)) => {
                 let mut terms = [(); MAIN_GATE_WIDTH].map(|_| Term::Zero);
-                terms[0] = Term::Assigned(*assigned, *constant);
+                terms[0] = Term::Assigned(assigned.clone(), *constant);
                 terms[1] =
-                    Term::unassigned_to_sub(assigned.value().map(|assigned| assigned * constant));
+                    Term::unassigned_to_sub(assigned.value().map(|assigned| *assigned * constant));
                 MainGateInstructions::apply(
                     &self.main_gate,
                     &mut self.ctx_mut(),
@@ -365,7 +365,7 @@ impl<'a, 'b, C: CurveAffine, const LIMBS: usize, const BITS: usize> Scalar<'a, '
     pub fn assigned(&self) -> AssignedValue<C::Scalar> {
         match &self.value {
             Value::Constant(constant) => self.loader.assign_const_scalar(*constant).assigned(),
-            Value::Assigned(assigned) => *assigned,
+            Value::Assigned(assigned) => assigned.clone(),
         }
     }
 }

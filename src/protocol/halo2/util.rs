@@ -3,9 +3,9 @@ use crate::{
     util::{Curve, PrimeCurveAffine, PrimeField, Transcript, TranscriptRead, UncompressedEncoding},
     Error,
 };
-use halo2_proofs::{
+use halo2_wrong::halo2::{
     arithmetic::{CurveAffine, CurveExt},
-    transcript::{Blake2bRead, Challenge255},
+    transcript::{Blake2bRead, Challenge255, self},
 };
 use std::{io::Read, iter};
 
@@ -45,16 +45,16 @@ impl<R: Read, C: CurveAffine> Transcript<C::CurveExt, NativeLoader>
     for Blake2bRead<R, C, Challenge255<C>>
 {
     fn squeeze_challenge(&mut self) -> C::Scalar {
-        *halo2_proofs::transcript::Transcript::squeeze_challenge_scalar::<C::Scalar>(self)
+        *transcript::Transcript::squeeze_challenge_scalar::<C::Scalar>(self)
     }
 
     fn common_ec_point(&mut self, ec_point: &C::CurveExt) -> Result<(), Error> {
-        halo2_proofs::transcript::Transcript::common_point(self, ec_point.to_affine())
+        transcript::Transcript::common_point(self, ec_point.to_affine())
             .map_err(|err| Error::Transcript(err.kind(), err.to_string()))
     }
 
     fn common_scalar(&mut self, scalar: &C::Scalar) -> Result<(), Error> {
-        halo2_proofs::transcript::Transcript::common_scalar(self, *scalar)
+        transcript::Transcript::common_scalar(self, *scalar)
             .map_err(|err| Error::Transcript(err.kind(), err.to_string()))
     }
 }
@@ -63,12 +63,12 @@ impl<R: Read, C: CurveAffine> TranscriptRead<C::CurveExt, NativeLoader>
     for Blake2bRead<R, C, Challenge255<C>>
 {
     fn read_scalar(&mut self) -> Result<C::Scalar, Error> {
-        halo2_proofs::transcript::TranscriptRead::read_scalar(self)
+        transcript::TranscriptRead::read_scalar(self)
             .map_err(|err| Error::Transcript(err.kind(), err.to_string()))
     }
 
     fn read_ec_point(&mut self) -> Result<C::CurveExt, Error> {
-        halo2_proofs::transcript::TranscriptRead::read_point(self)
+        transcript::TranscriptRead::read_point(self)
             .map(|ec_point| ec_point.to_curve())
             .map_err(|err| Error::Transcript(err.kind(), err.to_string()))
     }

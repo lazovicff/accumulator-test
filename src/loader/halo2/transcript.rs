@@ -7,7 +7,7 @@ use crate::{
     Error,
 };
 use halo2_curves::{Coordinates, CurveAffine};
-use halo2_proofs::circuit;
+use halo2_wrong::halo2::circuit;
 use halo2_wrong_ecc::integer::rns::{Common, Integer, Rns};
 use halo2_wrong_transcript::{NativeRepresentation, PointRepresentation, TranscriptChip};
 use poseidon::{Poseidon, Spec};

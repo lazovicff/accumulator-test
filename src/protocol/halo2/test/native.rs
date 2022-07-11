@@ -4,10 +4,10 @@ use crate::{
     scheme::{PlonkAccumulationScheme, ShplonkAccumulationScheme},
 };
 use halo2_curves::bn256::G1Affine;
-use halo2_proofs::{
+use halo2_wrong::halo2::{
     poly::kzg::{
         multiopen::{ProverGWC, ProverSHPLONK, VerifierGWC, VerifierSHPLONK},
-        strategy::BatchVerifier,
+        strategy::AccumulatorStrategy,
     },
     transcript::{Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer},
 };
@@ -33,7 +33,7 @@ fn test_shplonk_native_main_gate_with_range() {
         &circuits,
         ProverSHPLONK<_>,
         VerifierSHPLONK<_>,
-        BatchVerifier<_, _>,
+        AccumulatorStrategy<_>,
         Blake2bWrite<_, _, _>,
         Blake2bRead<_, _, _>,
         Challenge255<_>
@@ -68,7 +68,7 @@ fn test_plonk_native_main_gate_with_range() {
         &circuits,
         ProverGWC<_>,
         VerifierGWC<_>,
-        BatchVerifier<_, _>,
+        AccumulatorStrategy<_>,
         Blake2bWrite<_, _, _>,
         Blake2bRead<_, _, _>,
         Challenge255<_>

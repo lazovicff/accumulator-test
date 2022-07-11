@@ -3,7 +3,7 @@ use crate::{
     util::{fe_to_limbs, Curve, Group},
 };
 use halo2_curves::CurveAffine;
-use halo2_proofs::{
+use halo2_wrong::halo2::{
     arithmetic::FieldExt,
     circuit::{floor_planner::V1, Layouter, Value},
     dev::MockProver,
@@ -41,7 +41,7 @@ pub fn read_or_create_srs<S: CommitmentScheme>(scheme: &str, k: u32) -> S::Param
         Ok(mut file) => S::ParamsProver::read(&mut file).unwrap(),
         Err(_) => {
             fs::create_dir_all(DIR).unwrap();
-            let params = S::new_params(k, ChaCha20Rng::from_seed(Default::default()));
+            let params = S::new_params(k);
             let mut file = fs::File::create(path.as_str()).unwrap();
             params.write(&mut file).unwrap();
             params
@@ -174,9 +174,9 @@ impl MainGateWithRangeConfig {
         EccConfig::new(self.range_config.clone(), self.main_gate_config.clone())
     }
 
-    fn configure<F: FieldExt>(meta: &mut ConstraintSystem<F>, fine_tune_bits: Vec<usize>) -> Self {
+    fn configure<F: FieldExt>(meta: &mut ConstraintSystem<F>, fine_tune_bits: Vec<usize>, overflow_bits: Vec<usize>) -> Self {
         let main_gate_config = MainGate::<F>::configure(meta);
-        let range_config = RangeChip::<F>::configure(meta, &main_gate_config, fine_tune_bits);
+        let range_config = RangeChip::<F>::configure(meta, &main_gate_config, fine_tune_bits, overflow_bits);
         MainGateWithRangeConfig {
             main_gate_config,
             range_config,
@@ -186,10 +186,10 @@ impl MainGateWithRangeConfig {
     fn load_table<F: FieldExt>(
         &self,
         layouter: &mut impl Layouter<F>,
-        dense_limb_bits: usize,
     ) -> Result<(), Error> {
-        let range_chip = RangeChip::<F>::new(self.range_config.clone(), dense_limb_bits);
-        range_chip.load_table(layouter)?;
+        let range_chip = RangeChip::<F>::new(self.range_config.clone());
+        range_chip.load_composition_tables(layouter)?;
+        range_chip.load_overflow_tables(layouter)?;
         Ok(())
     }
 }
@@ -231,7 +231,7 @@ impl<F: FieldExt> Circuit<F> for MainGateWithRange<F> {
     }
 
     fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
-        MainGateWithRangeConfig::configure(meta, vec![1])
+        MainGateWithRangeConfig::configure(meta, vec![1], vec![BITS / LIMBS])
     }
 
     fn synthesize(
@@ -239,30 +239,30 @@ impl<F: FieldExt> Circuit<F> for MainGateWithRange<F> {
         config: Self::Config,
         mut layouter: impl Layouter<F>,
     ) -> Result<(), Error> {
-        let main_gate = MainGate::new(config.main_gate_config);
-        let range_chip = RangeChip::new(config.range_config, 8);
-        range_chip.load_table(&mut layouter)?;
+        let main_gate = MainGate::new(config.main_gate_config.clone());
+		config.load_table(&mut layouter)?;
+        let range_chip = RangeChip::new(config.range_config);
 
         let a = layouter.assign_region(
             || "",
             |mut region| {
                 let mut offset = 0;
                 let mut ctx = RegionCtx::new(&mut region, &mut offset);
-                let a = range_chip.range_value(&mut ctx, &Value::known(self.0[0]).into(), 33)?;
+                let a = range_chip.assign(&mut ctx, Value::known(self.0[0]).into(), 33, 4)?;
                 let b = main_gate.sub_sub_with_constant(&mut ctx, &a, &a, &a, F::from(2))?;
-                let cond = main_gate.assign_value(&mut ctx, &Value::known(F::one()).into())?;
+                let cond = main_gate.assign_value(&mut ctx, Value::known(F::one()).into())?;
                 main_gate.select(&mut ctx, &a, &b, &cond.into())?;
                 main_gate.compose(
                     &mut ctx,
                     &[
-                        Term::Assigned(a, F::from(3)),
-                        Term::Assigned(a, F::from(4)),
-                        Term::Assigned(a, F::from(5)),
-                        Term::Assigned(a, F::from(6)),
-                        Term::Assigned(a, F::from(7)),
-                        Term::Assigned(a, F::from(8)),
-                        Term::Assigned(a, F::from(9)),
-                        Term::Assigned(a, F::from(10)),
+                        Term::Assigned(a.clone(), F::from(3)),
+                        Term::Assigned(a.clone(), F::from(4)),
+                        Term::Assigned(a.clone(), F::from(5)),
+                        Term::Assigned(a.clone(), F::from(6)),
+                        Term::Assigned(a.clone(), F::from(7)),
+                        Term::Assigned(a.clone(), F::from(8)),
+                        Term::Assigned(a.clone(), F::from(9)),
+                        Term::Assigned(a.clone(), F::from(10)),
                     ],
                     F::from(11),
                 )?;
@@ -309,7 +309,7 @@ where
     C: Circuit<S::Scalar>,
     P: Prover<'a, S>,
     V: Verifier<'a, S>,
-    VS: VerificationStrategy<'a, S, V, R, Output = VS>,
+    VS: VerificationStrategy<'a, S, V, Output = VS>,
     TW: TranscriptWriterBuffer<Vec<u8>, S::Curve, E>,
     TR: TranscriptReadBuffer<&'static [u8], S::Curve, E>,
     E: EncodedChallenge<S::Curve>,
@@ -341,7 +341,7 @@ where
 
     let accept = {
         let params = params.verifier_params();
-        let strategy = VS::new(params, rng);
+        let strategy = VS::new(params);
         let mut transcript = TR::init(Box::leak(Box::new(proof.clone())));
         verify_proof(params, pk.get_vk(), strategy, instances, &mut transcript)
             .unwrap()
@@ -355,8 +355,8 @@ where
 #[macro_export]
 macro_rules! halo2_prepare {
     ([kzg], $k:ident, $n:ident, $accumulator_indices:expr, $create_circuit:expr) => {{
-        use halo2_curves::bn256::{Bn256, G1};
-        use halo2_proofs::{
+		use halo2_wrong::curves::bn256::{Bn256, G1};
+        use halo2_wrong::halo2::{
             plonk::{keygen_pk, keygen_vk},
             poly::kzg::commitment::KZGCommitmentScheme,
         };
@@ -396,7 +396,7 @@ macro_rules! halo2_prepare {
 #[macro_export]
 macro_rules! halo2_create_snark {
     ([kzg], $params:expr, $pk:expr, $protocol:expr, $circuits:expr, $prover:ty, $verifier:ty, $verification_strategy:ty, $transcript_read:ty, $transcript_write:ty, $encoded_challenge:ty) => {{
-        use halo2_proofs::poly::kzg::commitment::KZGCommitmentScheme;
+        use halo2_wrong::halo2::poly::kzg::commitment::KZGCommitmentScheme;
         use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng};
         use $crate::protocol::halo2::test::{create_proof_checked, Snark};
 
@@ -452,8 +452,8 @@ macro_rules! halo2_native_accumulate {
 #[macro_export]
 macro_rules! halo2_native_verify {
     ([kzg], $params:ident, $protocol:expr, $statements:expr, $scheme:ty, $transcript:expr) => {{
-        use halo2_curves::bn256::Bn256;
-        use halo2_proofs::poly::commitment::ParamsProver;
+		use halo2_wrong::halo2::poly::commitment::ParamsProver;
+		use halo2_wrong::curves::bn256::Bn256;
         use $crate::{
             halo2_native_accumulate,
             protocol::halo2::test::{BITS, LIMBS},

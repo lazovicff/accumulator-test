@@ -2,8 +2,6 @@ use crate::util::{Curve, FieldOps, GroupOps, PrimeField};
 use std::{fmt::Debug, iter};
 
 pub mod native;
-
-#[cfg(feature = "halo2")]
 pub mod halo2;
 
 pub trait LoadedEcPoint<C: Curve>: Clone + Debug + GroupOps + PartialEq {

@@ -12,7 +12,7 @@ use crate::{
     util::{fe_to_limbs, Curve, Group, PrimeCurveAffine},
 };
 use halo2_curves::bn256::{Fr, G1Affine, G1};
-use halo2_proofs::{
+use halo2_wrong::halo2::{
     circuit::{floor_planner::V1, Layouter, Value},
     plonk,
     plonk::Circuit,
@@ -20,7 +20,7 @@ use halo2_proofs::{
         commitment::ParamsProver,
         kzg::{
             multiopen::{ProverSHPLONK, VerifierSHPLONK},
-            strategy::BatchVerifier,
+            strategy::AccumulatorStrategy,
         },
     },
     transcript::{Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer},
@@ -29,7 +29,7 @@ use halo2_wrong_ecc;
 use halo2_wrong_maingate::RegionCtx;
 use halo2_wrong_transcript::NativeRepresentation;
 use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng};
-use std::rc::Rc;
+use std::{rc::Rc, vec};
 
 const T: usize = 5;
 const RATE: usize = 4;
@@ -133,7 +133,7 @@ impl Accumulation {
                 &circuits,
                 ProverSHPLONK<_>,
                 VerifierSHPLONK<_>,
-                BatchVerifier<_, _>,
+                AccumulatorStrategy<_>,
                 PoseidonTranscript<_, _, _, _>,
                 PoseidonTranscript<_, _, _, _>,
                 ChallengeScalar<_>
@@ -156,7 +156,7 @@ impl Accumulation {
                 &circuits,
                 ProverSHPLONK<_>,
                 VerifierSHPLONK<_>,
-                BatchVerifier<_, _>,
+                AccumulatorStrategy<_>,
                 PoseidonTranscript<_, _, _, _>,
                 PoseidonTranscript<_, _, _, _>,
                 ChallengeScalar<_>
@@ -214,7 +214,7 @@ impl Accumulation {
             &circuits,
             ProverSHPLONK<_>,
             VerifierSHPLONK<_>,
-            BatchVerifier<_, _>,
+            AccumulatorStrategy<_>,
             PoseidonTranscript<_, _, _, _>,
             PoseidonTranscript<_, _, _, _>,
             ChallengeScalar<_>
@@ -273,6 +273,7 @@ impl Circuit<Fr> for Accumulation {
         MainGateWithRangeConfig::configure::<Fr>(
             meta,
             BaseFieldEccChip::<G1Affine>::rns().overflow_lengths(),
+			vec![BITS / LIMBS],
         )
     }
 
@@ -281,7 +282,7 @@ impl Circuit<Fr> for Accumulation {
         config: Self::Config,
         mut layouter: impl Layouter<Fr>,
     ) -> Result<(), plonk::Error> {
-        config.load_table(&mut layouter, BITS / LIMBS)?;
+        config.load_table(&mut layouter)?;
 
         let (lhs, rhs) = layouter.assign_region(
             || "",
@@ -333,7 +334,7 @@ fn test_shplonk_halo2_accumulation_two_snark() {
         &circuits,
         ProverSHPLONK<_>,
         VerifierSHPLONK<_>,
-        BatchVerifier<_, _>,
+        AccumulatorStrategy<_>,
         Blake2bWrite<_, _, _>,
         Blake2bRead<_, _, _>,
         Challenge255<_>
@@ -370,7 +371,7 @@ fn test_shplonk_halo2_accumulation_two_snark_with_accumulator() {
         &circuits,
         ProverSHPLONK<_>,
         VerifierSHPLONK<_>,
-        BatchVerifier<_, _>,
+        AccumulatorStrategy<_>,
         Blake2bWrite<_, _, _>,
         Blake2bRead<_, _, _>,
         Challenge255<_>
