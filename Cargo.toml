@@ -12,10 +12,8 @@ num-bigint = "0.4"
 num-traits = "0.2"
 rand = "0.8"
 rand_chacha = "0.3.1"
-halo2_curves = { git = "https://github.com/privacy-scaling-explorations/halo2curves", tag = "v0.2.0", package = "halo2curves" }
 
 # halo2
-blake2b_simd = { version = "1.0.0", optional = true }
 halo2_wrong = { git = "https://github.com/lazovicff/halo2wrong", package = "halo2wrong" }
 halo2_wrong_ecc = { git = "https://github.com/lazovicff/halo2wrong", package = "ecc" }
 halo2_wrong_maingate = { git = "https://github.com/lazovicff/halo2wrong", package = "maingate" }

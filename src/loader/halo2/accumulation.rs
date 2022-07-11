@@ -8,7 +8,7 @@ use crate::{
     util::Transcript,
     Error,
 };
-use halo2_curves::CurveAffine;
+use halo2_wrong::curves::CurveAffine;
 use halo2_wrong_ecc::AssignedPoint;
 use std::rc::Rc;
 

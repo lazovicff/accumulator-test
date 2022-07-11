@@ -2,7 +2,7 @@ use crate::{
     protocol::Protocol,
     util::{fe_to_limbs, Curve, Group},
 };
-use halo2_curves::CurveAffine;
+use halo2_wrong::curves::CurveAffine;
 use halo2_wrong::halo2::{
     arithmetic::FieldExt,
     circuit::{floor_planner::V1, Layouter, Value},
@@ -22,10 +22,7 @@ use halo2_wrong_maingate::{
     MainGate, MainGateConfig, MainGateInstructions, RangeChip, RangeConfig, RangeInstructions,
     RegionCtx, Term,
 };
-use rand_chacha::{
-    rand_core::{RngCore, SeedableRng},
-    ChaCha20Rng,
-};
+use rand_chacha::rand_core::RngCore;
 use std::{fs, iter};
 
 mod halo2;

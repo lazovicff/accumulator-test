@@ -2,7 +2,7 @@ use crate::{
     loader::{EcPointLoader, LoadedEcPoint, LoadedScalar, Loader, ScalarLoader},
     util::{Curve, Field, FieldOps, Group},
 };
-use halo2_curves::CurveAffine;
+use halo2_wrong::curves::CurveAffine;
 use halo2_wrong::halo2::circuit;
 use halo2_wrong_ecc::{
     integer::{

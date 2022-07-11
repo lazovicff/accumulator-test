@@ -11,7 +11,7 @@ use crate::{
     scheme::{self, AccumulationScheme, ShplonkAccumulationScheme},
     util::{fe_to_limbs, Curve, Group, PrimeCurveAffine},
 };
-use halo2_curves::bn256::{Fr, G1Affine, G1};
+use halo2_wrong::curves::bn256::{Fr, G1Affine, G1};
 use halo2_wrong::halo2::{
     circuit::{floor_planner::V1, Layouter, Value},
     plonk,
@@ -74,36 +74,6 @@ impl<C: Curve> SnarkWitness<C> {
             proof: Value::unknown(),
         }
     }
-}
-
-pub fn accumulate<'a, 'b>(
-    loader: &Rc<Halo2Loader<'a, 'b, G1Affine>>,
-    stretagy: &mut SameCurveAccumulation<G1, Rc<Halo2Loader<'a, 'b, G1Affine>>>,
-    snark: &SnarkWitness<G1>,
-) -> Result<(), plonk::Error> {
-    let mut transcript = PoseidonTranscript::<_, Rc<Halo2Loader<G1Affine>>, _, _>::new(
-        loader,
-        snark.proof.as_ref().map(|proof| proof.as_slice()),
-    );
-    let statements = snark
-        .statements
-        .iter()
-        .map(|statements| {
-            statements
-                .iter()
-                .map(|statement| loader.assign_scalar(*statement))
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>();
-    ShplonkAccumulationScheme::accumulate(
-        &snark.protocol,
-        loader,
-        statements,
-        &mut transcript,
-        stretagy,
-    )
-    .map_err(|_| plonk::Error::Synthesis)?;
-    Ok(())
 }
 
 pub struct Accumulation {
@@ -293,7 +263,28 @@ impl Circuit<Fr> for Accumulation {
                 let loader = Halo2Loader::<G1Affine>::new(config.ecc_config(), ctx);
                 let mut stretagy = SameCurveAccumulation::default();
                 for snark in self.snarks.iter() {
-                    accumulate(&loader, &mut stretagy, snark)?;
+                    let mut transcript = PoseidonTranscript::<_, Rc<Halo2Loader<G1Affine>>, _, _>::new(
+						&loader,
+						snark.proof.as_ref().map(|proof| proof.as_slice()),
+					);
+					let statements = snark
+						.statements
+						.iter()
+						.map(|statements| {
+							statements
+								.iter()
+								.map(|statement| loader.assign_scalar(*statement))
+								.collect::<Vec<_>>()
+						})
+						.collect::<Vec<_>>();
+					ShplonkAccumulationScheme::accumulate(
+						&snark.protocol,
+						&loader,
+						statements,
+						&mut transcript,
+						&mut stretagy,
+					)
+					.map_err(|_| plonk::Error::Synthesis)?;
                 }
                 let (lhs, rhs) = stretagy.finalize(self.g1);
 

@@ -3,7 +3,7 @@ use crate::{
     protocol::halo2::test::MainGateWithRange,
     scheme::{PlonkAccumulationScheme, ShplonkAccumulationScheme},
 };
-use halo2_curves::bn256::G1Affine;
+use halo2_wrong::curves::bn256::G1Affine;
 use halo2_wrong::halo2::{
     poly::kzg::{
         multiopen::{ProverGWC, ProverSHPLONK, VerifierGWC, VerifierSHPLONK},

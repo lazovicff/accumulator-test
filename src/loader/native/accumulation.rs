@@ -5,7 +5,7 @@ use crate::{
     util::{fe_from_limbs, Curve, Group, PrimeCurveAffine, Transcript},
     Error,
 };
-use halo2_curves::{
+use halo2_wrong::curves::{
     pairing::{MillerLoopResult, MultiMillerLoop},
     CurveAffine, CurveExt,
 };

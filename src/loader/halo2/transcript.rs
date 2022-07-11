@@ -6,7 +6,7 @@ use crate::{
     util::{Curve, GroupEncoding, PrimeField, Transcript, TranscriptRead},
     Error,
 };
-use halo2_curves::{Coordinates, CurveAffine};
+use halo2_wrong::curves::{Coordinates, CurveAffine};
 use halo2_wrong::halo2::circuit;
 use halo2_wrong_ecc::integer::rns::{Common, Integer, Rns};
 use halo2_wrong_transcript::{NativeRepresentation, PointRepresentation, TranscriptChip};

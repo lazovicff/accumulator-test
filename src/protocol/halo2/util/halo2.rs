@@ -3,7 +3,7 @@ use crate::{
     util::{self, Curve, PrimeField},
     Error,
 };
-use halo2_curves::CurveAffine;
+use halo2_wrong::curves::CurveAffine;
 use halo2_wrong::halo2::transcript::{
     EncodedChallenge, Transcript, TranscriptRead, TranscriptReadBuffer, TranscriptWrite,
     TranscriptWriterBuffer,
