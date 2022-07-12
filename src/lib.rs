@@ -7,6 +7,8 @@
 pub mod loader;
 pub mod protocol;
 pub mod scheme;
+pub mod circuit;
+pub mod native;
 pub mod util;
 
 #[derive(Clone, Debug)]
