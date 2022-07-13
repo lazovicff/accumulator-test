@@ -3,7 +3,7 @@ use crate::{
         halo2::loader::{Halo2Loader, Scalar},
         LoadedEcPoint,
     },
-    protocol::native::Protocol,
+    protocol::Protocol,
     scheme::{AccumulationStrategy, Accumulator, SameCurveAccumulation, MSM},
     util::Transcript,
     Error,

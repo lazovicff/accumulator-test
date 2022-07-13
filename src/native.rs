@@ -1,5 +1,5 @@
 use crate::util::{Curve, Group};
-use crate::protocol::native::Protocol;
+use crate::protocol::Protocol;
 
 pub struct Snark<C: Curve> {
     pub(crate) protocol: Protocol<C>,

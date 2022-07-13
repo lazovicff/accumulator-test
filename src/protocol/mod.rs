@@ -1,5 +1,5 @@
 use crate::{
-    util::{CommonPolynomial, Domain, Expression, Query, Rotation},
+    util::{CommonPolynomial, Domain, Expression, Query, Rotation, Curve},
 };
 use halo2_wrong::{
 	halo2::{
@@ -10,9 +10,42 @@ use halo2_wrong::{
 	},
 };
 use std::{io, iter};
-use native::Protocol;
 
-pub mod native;
+#[derive(Clone, Debug)]
+pub struct Protocol<C: Curve> {
+    pub domain: Domain<C::Scalar>,
+    pub preprocessed: Vec<C>,
+    pub num_statement: usize,
+    pub num_auxiliary: Vec<usize>,
+    pub num_challenge: Vec<usize>,
+    pub evaluations: Vec<Query>,
+    pub queries: Vec<Query>,
+    pub relations: Vec<Expression<C::Scalar>>,
+    pub transcript_initial_state: C::Scalar,
+    pub accumulator_indices: Option<Vec<Vec<(usize, usize)>>>,
+}
+
+impl<C: Curve> Protocol<C> {
+    pub fn vanishing_poly(&self) -> usize {
+        self.preprocessed.len() + self.num_statement + self.num_auxiliary.iter().sum::<usize>()
+    }
+
+    pub fn langranges<T>(&self, statements: &[Vec<T>]) -> impl IntoIterator<Item = i32> {
+        self.relations
+            .iter()
+            .cloned()
+            .sum::<Expression<_>>()
+            .used_langrange()
+            .into_iter()
+            .chain(
+                0..statements
+                    .iter()
+                    .map(|statement| statement.len())
+                    .max()
+                    .unwrap_or_default() as i32,
+            )
+    }
+}
 
 impl From<poly::Rotation> for Rotation {
     fn from(rotation: poly::Rotation) -> Rotation {

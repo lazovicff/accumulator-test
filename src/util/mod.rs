@@ -3,7 +3,7 @@ mod expression;
 mod transcript;
 
 use std::fmt::Debug;
-use crate::protocol::native::Protocol;
+use crate::protocol::Protocol;
 use rand::RngCore;
 
 use crate::protocol::compile;

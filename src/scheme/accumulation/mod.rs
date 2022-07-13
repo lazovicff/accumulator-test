@@ -1,6 +1,6 @@
 use crate::{
     loader::Loader,
-    protocol::native::Protocol,
+    protocol::Protocol,
     scheme::msm::MSM,
     util::{Curve, Transcript},
     Error,

@@ -1,6 +1,6 @@
 use crate::{
     loader::halo2::Halo2Loader,
-    protocol::native::Protocol,
+    protocol::Protocol,
     scheme::{AccumulationScheme, ShplonkAccumulationScheme},
     util::{Curve, Group},
 };
@@ -24,28 +24,14 @@ pub const LIMBS: usize = 4;
 pub const BITS: usize = 68;
 
 #[derive(Clone)]
-pub struct MainGateWithRangeConfig {
+pub struct AccumulatorConfig {
     main_gate_config: MainGateConfig,
     range_config: RangeConfig,
 }
 
-impl MainGateWithRangeConfig {
+impl AccumulatorConfig {
     fn ecc_config(&self) -> EccConfig {
         EccConfig::new(self.range_config.clone(), self.main_gate_config.clone())
-    }
-
-    fn configure<F: FieldExt>(
-        meta: &mut ConstraintSystem<F>,
-        composition_bits: Vec<usize>,
-        overflow_bits: Vec<usize>,
-    ) -> Self {
-        let main_gate_config = MainGate::<F>::configure(meta);
-        let range_config =
-            RangeChip::<F>::configure(meta, &main_gate_config, composition_bits, overflow_bits);
-        MainGateWithRangeConfig {
-            main_gate_config,
-            range_config,
-        }
     }
 
     fn load_table<F: FieldExt>(&self, layouter: &mut impl Layouter<F>) -> Result<(), Error> {
@@ -90,13 +76,13 @@ impl<C: Curve> SnarkWitness<C> {
     }
 }
 
-pub struct Accumulation<E: Engine> {
+pub struct Accumulator<E: Engine> {
     g1: E::G1Affine,
     snarks: Vec<SnarkWitness<E::G1>>,
 }
 
-impl<E: Engine> Circuit<E::Scalar> for Accumulation<E> {
-    type Config = MainGateWithRangeConfig;
+impl<E: Engine> Circuit<E::Scalar> for Accumulator<E> {
+    type Config = AccumulatorConfig;
     type FloorPlanner = V1;
 
     fn without_witnesses(&self) -> Self {
@@ -111,11 +97,15 @@ impl<E: Engine> Circuit<E::Scalar> for Accumulation<E> {
     }
 
     fn configure(meta: &mut ConstraintSystem<E::Scalar>) -> Self::Config {
-        MainGateWithRangeConfig::configure::<E::Scalar>(
-            meta,
-            BaseFieldEccChip::<E::G1Affine, LIMBS, BITS>::rns().overflow_lengths(),
-			vec![BITS / LIMBS],
-        )
+		let composition_bits = BaseFieldEccChip::<E::G1Affine, LIMBS, BITS>::rns().overflow_lengths();
+		let overflow_bits = vec![BITS / LIMBS];
+		let main_gate_config = MainGate::<E::Scalar>::configure(meta);
+        let range_config =
+            RangeChip::<E::Scalar>::configure(meta, &main_gate_config, composition_bits, overflow_bits);
+		AccumulatorConfig {
+            main_gate_config,
+            range_config,
+        }
     }
 
     fn synthesize(
@@ -169,4 +159,12 @@ impl<E: Engine> Circuit<E::Scalar> for Accumulation<E> {
 
         Ok(())
     }
+}
+
+#[cfg(test)]
+mod test {
+	#[test]
+	fn should_accumulate_two_proofs() {
+		
+	}
 }

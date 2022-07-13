@@ -1,6 +1,6 @@
 use crate::{
     loader::{LoadedScalar, Loader},
-    protocol::native::Protocol,
+    protocol::Protocol,
     scheme::{
         accumulation::{AccumulationScheme, AccumulationStrategy, Accumulator},
         msm::MSM,
