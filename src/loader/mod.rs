@@ -1,7 +1,6 @@
 use crate::util::{Curve, FieldOps, GroupOps, PrimeField};
 use std::{fmt::Debug, iter};
 
-pub mod native;
 pub mod halo2;
 
 pub trait LoadedEcPoint<C: Curve>: Clone + Debug + GroupOps + PartialEq {

@@ -12,7 +12,6 @@ use halo2_wrong::{
 use std::{io, iter};
 use native::Protocol;
 
-pub mod halo2;
 pub mod native;
 
 impl From<poly::Rotation> for Rotation {
